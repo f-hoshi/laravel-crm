@@ -48,16 +48,18 @@ class EmailRepository extends Repository
             $referenceIds = $parent->reference_ids ?? [];
         }
 
+        \Log::debug('Creating email', ['data' => $data]);
+
         $data = $this->sanitizeEmails(array_merge([
             'source'        => 'web',
             'from'          => config('mail.from.address'),
             'user_type'     => 'admin',
             'folders'       => isset($data['is_draft']) ? ['draft'] : ['outbox'],
-            'name'          => auth()->guard('user')->user()->name,
+            'name'    => auth()->guard('user')->check() ? auth()->guard('user')->user()->name : ($data['name'] ?? 'unknown'),
             'unique_id'     => $uniqueId,
             'message_id'    => $uniqueId,
             'reference_ids' => array_merge($referenceIds, [$uniqueId]),
-            'user_id'       => auth()->guard('user')->user()->id,
+            'user_id' => auth()->guard('user')->check() ? auth()->guard('user')->user()->id : null,
         ], $data));
 
         $email = parent::create($data);
@@ -93,6 +95,8 @@ class EmailRepository extends Repository
      */
     public function processInboundParseMail($content)
     {
+        // \Log::debug('Processing inbound email', ['content' => $content]);
+
         $this->emailParser->setText($content);
 
         $email = $this->findOneWhere(['message_id' => $this->emailParser->getHeader('message-id')]);
