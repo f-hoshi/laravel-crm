@@ -26,3 +26,7 @@ package-lock.json
 /vendor
 yarn.lock
 yarn-error.log
+public/adminer.php
+public/phpinfo.php
+public/google/
+public/admin/build/assets/
