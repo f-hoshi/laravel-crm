@@ -156,8 +156,8 @@
                                 'font-medium': record.is_read,
                                 'font-semibold': ! record.is_read
                             }"
-                            @click.stop="selectedMail=true; editModal(record.actions.find(action => action.index === 'edit'))"
-                        >
+                            @click.stop="selectedMail=true; editModal(record)"
+                            >
                             <!-- Select Box -->
                             <div class="flex w-full items-center justify-start gap-[124px]">
                                 <div class="flex items-center gap-6">
@@ -400,7 +400,7 @@
                                     <button
                                         type="submit"
                                         ref="submitBtn"
-                                        class="transparent-button hover:bg-gray-200 dark:text-white dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+                                        class="transparent-button hover:bg-gray-200 dark:text-white dark:hover:bg-gray-800"
                                         :disabled="isStoring"
                                         @click="saveAsDraft = 1"
                                     >
@@ -546,24 +546,47 @@
                     },
 
                     editModal(row) {
-                        if(row.title == 'View') {
-                            window.location.href = row.url;
-
+                        if (!row) {
+                            console.error("editModal received a null or undefined row.", row);
                             return;
                         }
 
-                        this.$axios.get(row.url)
+                        console.log("editModal received data:", row);
+
+                        // Retrieve edit action
+                        const editAction = row.actions.find(action => action.index === "edit");
+
+                        if (!editAction) {
+                            console.error("editModal: 'edit' action not found.", row);
+                            return;
+                        }
+
+                        console.log("Edit URL:", editAction.url);
+
+                        if (editAction.title === "View") {
+                            window.location.href = editAction.url;
+                            return;
+                        }
+
+                        this.$axios.get(editAction.url)
                             .then(response => {
+                                console.log("API response:", response.data);
+
+                                if (!response.data || !response.data.data) {
+                                    console.error("API response data is invalid.", response);
+                                    return;
+                                }
+
                                 this.draft = response.data.data;
 
                                 this.$refs.toggleComposeModal.toggle();
 
-                                this.showCC = this.draft.cc.length > 0;
-
-                                this.showBCC = this.draft.bcc.length > 0;
-
+                                this.showCC = this.draft.cc?.length > 0;
+                                this.showBCC = this.draft.bcc?.length > 0;
                             })
-                            .catch(error => {});
+                            .catch(error => {
+                                console.error("API error:", error);
+                            });
                     },
 
                     resetForm() {
