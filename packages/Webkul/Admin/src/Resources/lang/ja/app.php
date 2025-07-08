@@ -575,7 +575,7 @@ return [
                         'mark-as-done' => 'Mark as Done',
                         'delete'       => 'Delete',
                         'edit'         => 'Edit',
-],
+                    ],
 
                     'actions' => [
                         'mail' => [
@@ -1698,7 +1698,7 @@ return [
     'activities' => [
         'index' => [
             'title'      => '活動',
-            'datagrid' => [
+            'datagrid'   => [
                 'comment'       => 'コメント',
                 'created_at'    => '作成日時',
                 'created_by'    => '作成者',
@@ -1776,26 +1776,26 @@ return [
                 'draft'         => '下書き',
             ],
             'datagrid' => [
-              'id'            => 'ID',
-              'from'          => 'From',
-              'to'            => 'To',
-              'subject'       => 'Subject',
-              'tags'          => 'Tags',
-              'content'       => 'Content',
-              'attachments'   => 'Attachments',
-              'date'          => 'Date',
-              'move-to-inbox' => 'Moved To Inbox',
-              'edit'          => 'Edit',
-              'view'          => 'View',
-              'delete'        => 'Delete',
-          ],
+                'id'            => 'ID',
+                'from'          => 'From',
+                'to'            => 'To',
+                'subject'       => 'Subject',
+                'tags'          => 'Tags',
+                'content'       => 'Content',
+                'attachments'   => 'Attachments',
+                'date'          => 'Date',
+                'move-to-inbox' => 'Moved To Inbox',
+                'edit'          => 'Edit',
+                'view'          => 'View',
+                'delete'        => 'Delete',
+            ],
         ],
         'create-success'      => 'メールを送信しました。',
         'update-success'      => 'メールを更新しました。',
         'mass-update-success' => 'メールを一括更新しました。',
         'delete-success'      => 'メールを削除しました。',
         'delete-failed'       => 'メールを削除できません。',
-        'view' => [
+        'view'                => [
             'title'                      => 'メール',
             'subject'                    => ':subject',
             'link-mail'                  => 'メールをリンク',
@@ -1828,8 +1828,8 @@ return [
             'linked-lead'                => 'リンク済みリード',
             'lead-details'               => 'リード詳細',
             'contact-person'             => '担当者',
-            'product'                    => '製品',
-            'tags' => [
+            'product'                    => '商品',
+            'tags'                       => [
                 'create-success'  => 'タグを作成しました。',
                 'destroy-success' => 'タグを削除しました。',
             ],
@@ -1863,7 +1863,7 @@ return [
         'update-failed'     => 'リードを削除できません。',
         'destroy-success'   => 'リードを削除しました。',
         'destroy-failed'    => 'リードを削除できません。',
-        'file' => [
+        'file'              => [
             'data-not-found'         => 'データが見つかりません。',
             'empty-content'          => 'PDFの内容が空、または抽出できません。',
             'failed-extract'         => 'ファイルからテキスト抽出に失敗しました。',
@@ -2047,7 +2047,7 @@ return [
                 'won'            => 'Won',
                 'lost'           => 'Lost',
                 'need-more-info' => 'Need More Details',
-            'closed-at'      => 'Closed At',
+                'closed-at'      => 'Closed At',
                 'won-value'      => 'Won Value',
                 'lost-reason'    => 'Lost Reason',
                 'save-btn'       => 'Save',
@@ -2336,9 +2336,9 @@ return [
             'dear'   => '親愛なる :name 様',
             'cheers' => 'よろしくお願いいたします。</br>:app_name チーム',
             'user'   => [
-                'dear'           => '親愛なる :username 様',
-                'create-subject' => 'メンバーとして追加されました。',
-                'create-body'    => 'おめでとうございます！あなたはチームのメンバーになりました。',
+                'dear'            => '親愛なる :username 様',
+                'create-subject'  => 'メンバーとして追加されました。',
+                'create-body'     => 'おめでとうございます！あなたはチームのメンバーになりました。',
                 'forget-password' => [
                     'subject'           => 'パスワードリセット',
                     'dear'              => '親愛なる :username 様',
@@ -2361,7 +2361,7 @@ return [
         'dashboard' => 'ダッシュボード',
         'go-back'   => '戻る',
         'support'   => '問題が解決しない場合は、<a href=":link" class=":class">:email</a> までご連絡ください。',
-        '404' => [
+        '404'       => [
             'description' => 'お探しのページは見つかりませんでした。',
             'title'       => '404 ページが見つかりません',
         ],
