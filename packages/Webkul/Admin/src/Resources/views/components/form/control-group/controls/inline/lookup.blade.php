@@ -380,7 +380,7 @@
                  * @return {void}
                  */
                 search() {
-                    if (this.searchTerm.length <= 2) {
+                    if (this.searchTerm.length <= 1) {
                         this.searchedResults = [];
 
                         this.isSearching = false;

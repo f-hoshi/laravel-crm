@@ -218,7 +218,11 @@
                     this.showPopup = ! this.showPopup;
 
                     if (this.showPopup) {
-                        this.$nextTick(() => this.$refs.searchInput.focus());
+                        this.$nextTick(() => {
+                            this.$refs.searchInput.focus();
+                            // ポップアップが開いた時に初期データを読み込む
+                            this.loadInitialData();
+                        });
                     }
                 },
 
@@ -245,7 +249,7 @@
                  * @return {void}
                  */
                 search() {
-                    if (this.searchTerm.length <= 2) {
+                    if (this.searchTerm.length <= 1) {
                         this.searchedResults = [];
 
                         this.isSearching = false;
@@ -274,6 +278,35 @@
                         .catch(error => {
                             if (! this.$axios.isCancel(error)) {
                                 console.error("Search request failed:", error);
+                            }
+
+                            this.isSearching = false;
+                        })
+                        .finally(() => this.isSearching = false);
+                },
+
+                loadInitialData() {
+                    this.isSearching = true;
+
+                    if (this.cancelToken) {
+                        this.cancelToken.cancel();
+                    }
+
+                    this.cancelToken = this.$axios.CancelToken.source();
+
+                    this.$axios.get(this.src, {
+                            params: { 
+                                ...this.params,
+                                query: ''
+                            },
+                            cancelToken: this.cancelToken.token, 
+                        })
+                        .then(response => {
+                            this.searchedResults = response.data.data;
+                        })
+                        .catch(error => {
+                            if (! this.$axios.isCancel(error)) {
+                                console.error("Initial data load failed:", error);
                             }
 
                             this.isSearching = false;

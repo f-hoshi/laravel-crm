@@ -125,6 +125,19 @@
                                 ]"
                             />
 
+                            <!-- Pipeline and Stage Selection -->
+                            <div class="flex gap-4 max-sm:flex-wrap">
+                                <div class="w-full">
+                                    <x-admin::attributes
+                                        :custom-attributes="app('Webkul\Attribute\Repositories\AttributeRepository')->findWhere([
+                                            ['code', 'IN', ['lead_pipeline_id', 'lead_pipeline_stage_id']],
+                                            'entity_type' => 'leads',
+                                            'quick_add'   => 1
+                                        ])"
+                                    />
+                                </div>
+                            </div>
+
                             <!-- Lead Details Other input fields -->
                             <div class="flex gap-4 max-sm:flex-wrap">
                                 <div class="w-full">

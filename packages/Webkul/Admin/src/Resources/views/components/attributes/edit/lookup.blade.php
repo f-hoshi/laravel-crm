@@ -211,12 +211,16 @@
                     this.showPopup = ! this.showPopup;
 
                     if (this.showPopup) {
-                        this.$nextTick(() => this.$refs.searchInput.focus());
+                        this.$nextTick(() => {
+                            this.$refs.searchInput.focus();
+                            // ポップアップが開いた時に初期データを読み込む
+                            this.loadInitialData();
+                        });
                     }
                 },
 
                 search() {
-                    if (this.searchTerm.length <= 2) {
+                    if (this.searchTerm.length <= 1) {
                         this.searchedResults = [];
 
                         this.isSearching = false;
@@ -228,6 +232,19 @@
 
                     this.$axios.get(this.searchRoute, {
                             params: { query: this.searchTerm }
+                        })
+                        .then (response => {
+                            this.searchedResults = response.data;
+                        })
+                        .catch (error => {})
+                        .finally(() => this.isSearching = false);
+                },
+
+                loadInitialData() {
+                    this.isSearching = true;
+
+                    this.$axios.get(this.searchRoute, {
+                            params: { query: '' }
                         })
                         .then (response => {
                             this.searchedResults = response.data;

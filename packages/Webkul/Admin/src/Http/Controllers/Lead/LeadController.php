@@ -161,10 +161,21 @@ class LeadController extends Controller
 
         $data['status'] = 1;
 
+        // デバッグ用ログ
+        \Log::info('Lead creation data:', $data);
+
         if (isset($data['lead_pipeline_stage_id'])) {
             $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
 
             $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
+        } elseif (isset($data['lead_pipeline_id'])) {
+            // パイプラインが直接選択された場合、そのパイプラインの最初のステージを取得
+            $pipeline = $this->pipelineRepository->findOrFail($data['lead_pipeline_id']);
+            $stage = $pipeline->stages()->first();
+            
+            if (!isset($data['lead_pipeline_stage_id'])) {
+                $data['lead_pipeline_stage_id'] = $stage->id;
+            }
         } else {
             $pipeline = $this->pipelineRepository->getDefaultPipeline();
 
@@ -230,6 +241,14 @@ class LeadController extends Controller
             $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
 
             $data['lead_pipeline_id'] = $stage->lead_pipeline_id;
+        } elseif (isset($data['lead_pipeline_id'])) {
+            // パイプラインが直接選択された場合、そのパイプラインの最初のステージを取得
+            $pipeline = $this->pipelineRepository->findOrFail($data['lead_pipeline_id']);
+            $stage = $pipeline->stages()->first();
+            
+            if (!isset($data['lead_pipeline_stage_id'])) {
+                $data['lead_pipeline_stage_id'] = $stage->id;
+            }
         } else {
             $pipeline = $this->pipelineRepository->getDefaultPipeline();
 
