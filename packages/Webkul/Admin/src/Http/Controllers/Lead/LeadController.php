@@ -507,6 +507,16 @@ class LeadController extends Controller
     }
 
     /**
+     * Get pipeline stages.
+     */
+    public function getPipelineStages(int $pipelineId)
+    {
+        $pipeline = $this->pipelineRepository->findOrFail($pipelineId);
+
+        return response()->json($pipeline->stages);
+    }
+
+    /**
      * Get columns for the kanban view.
      */
     private function getKanbanColumns(): array

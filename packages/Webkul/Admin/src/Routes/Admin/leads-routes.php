@@ -42,6 +42,8 @@ Route::controller(LeadController::class)->prefix('leads')->group(function () {
 
     Route::get('kanban/look-up', [LeadController::class, 'kanbanLookup'])->name('admin.leads.kanban.look_up');
 
+    Route::get('pipeline/{pipelineId}/stages', [LeadController::class, 'getPipelineStages'])->name('admin.leads.pipeline.stages');
+
     Route::controller(ActivityController::class)->prefix('{id}/activities')->group(function () {
         Route::get('', 'index')->name('admin.leads.activities.index');
     });

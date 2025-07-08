@@ -179,6 +179,15 @@
                 }
 
                 window.addEventListener('click', this.handleFocusOut);
+
+                // パイプライン変更時のイベントリスナーを追加
+                if (this.attribute.code === 'lead_pipeline_id') {
+                    this.$watch('selectedItem', (newVal) => {
+                        if (newVal && newVal.id) {
+                            this.$emit('pipeline-changed', newVal.id);
+                        }
+                    }, { deep: true });
+                }
             },
 
             watch: {
@@ -276,6 +285,11 @@
                     this.searchTerm = '';
 
                     this.$emit('lookup-added', this.selectedItem);
+
+                    // パイプライン変更イベントを発火
+                    if (this.attribute.code === 'lead_pipeline_id' && result.id) {
+                        this.$emitter.emit('pipeline-changed', result.id);
+                    }
                 },
 
                 handleFocusOut(e) {

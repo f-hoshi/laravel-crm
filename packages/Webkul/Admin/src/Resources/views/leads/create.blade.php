@@ -243,7 +243,22 @@
                             { id: 'contact-person', label: '@lang('admin::app.leads.create.contact-person')' },
                             { id: 'products', label: '@lang('admin::app.leads.create.products')' }
                         ],
+
+                        // パイプライン・ステージ制御用
+                        selectedPipelineId: null,
+                        pipelineStages: [],
+                        selectedStageId: null,
                     };
+                },
+
+                mounted() {
+                    // パイプライン変更イベントをリッスン
+                    this.$emitter.on('pipeline-changed', this.onPipelineChanged);
+                },
+
+                beforeUnmount() {
+                    // イベントリスナーをクリーンアップ
+                    this.$emitter.off('pipeline-changed', this.onPipelineChanged);
                 },
 
                 methods: {
@@ -259,6 +274,51 @@
 
                         if (section) {
                             section.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    },
+
+                    /**
+                     * パイプライン変更時の処理
+                     * 
+                     * @param {Number} pipelineId
+                     * 
+                     * @returns {void}
+                     */
+                    onPipelineChanged(pipelineId) {
+                        this.selectedPipelineId = pipelineId;
+                        
+                        // パイプラインのステージ一覧を取得
+                        this.$axios.get(`{{ route('admin.leads.pipeline.stages', ['pipelineId' => ':pipelineId']) }}`.replace(':pipelineId', pipelineId))
+                            .then(response => {
+                                this.pipelineStages = response.data;
+                                
+                                // ステージを最初のものにリセット
+                                if (this.pipelineStages.length > 0) {
+                                    this.selectedStageId = this.pipelineStages[0].id;
+                                    
+                                    // ステージのlookupコンポーネントを更新
+                                    this.updateStageLookup(this.selectedStageId);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Failed to fetch pipeline stages:', error);
+                            });
+                    },
+
+                    /**
+                     * ステージのlookupコンポーネントを更新
+                     * 
+                     * @param {Number} stageId
+                     * 
+                     * @returns {void}
+                     */
+                    updateStageLookup(stageId) {
+                        // ステージのlookupコンポーネントを探して更新
+                        const stageLookup = document.querySelector('input[name="lead_pipeline_stage_id"]');
+                        if (stageLookup) {
+                            stageLookup.value = stageId;
+                            // Vueコンポーネントの更新をトリガー
+                            stageLookup.dispatchEvent(new Event('input', { bubbles: true }));
                         }
                     },
                 },
