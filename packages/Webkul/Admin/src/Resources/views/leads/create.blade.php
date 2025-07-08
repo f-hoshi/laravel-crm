@@ -287,6 +287,9 @@
                     onPipelineChanged(pipelineId) {
                         this.selectedPipelineId = pipelineId;
                         
+                        // ステージのlookupコンポーネントをクリア
+                        this.clearStageLookup();
+                        
                         // パイプラインのステージ一覧を取得
                         this.$axios.get(`{{ route('admin.leads.pipeline.stages', ['pipelineId' => ':pipelineId']) }}`.replace(':pipelineId', pipelineId))
                             .then(response => {
@@ -306,6 +309,31 @@
                     },
 
                     /**
+                     * ステージのlookupコンポーネントをクリア
+                     * 
+                     * @returns {void}
+                     */
+                    clearStageLookup() {
+                        // ステージのlookupコンポーネントを探してクリア
+                        const stageLookup = document.querySelector('input[name="lead_pipeline_stage_id"]');
+                        if (stageLookup) {
+                            stageLookup.value = '';
+                            // Vueコンポーネントの更新をトリガー
+                            stageLookup.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+
+                        // ステージのlookupコンポーネントの選択肢もクリア
+                        const stageLookupComponents = document.querySelectorAll('v-lookup-component');
+                        stageLookupComponents.forEach(component => {
+                            if (component.attribute && component.attribute.code === 'lead_pipeline_stage_id') {
+                                component.searchedResults = [];
+                                component.selectedItem = { id: '', name: '' };
+                                component.$forceUpdate();
+                            }
+                        });
+                    },
+
+                    /**
                      * ステージのlookupコンポーネントを更新
                      * 
                      * @param {Number} stageId
@@ -320,6 +348,27 @@
                             // Vueコンポーネントの更新をトリガー
                             stageLookup.dispatchEvent(new Event('input', { bubbles: true }));
                         }
+
+                        // ステージのlookupコンポーネントの選択肢も更新
+                        this.updateStageLookupOptions();
+                    },
+
+                    /**
+                     * ステージのlookupコンポーネントの選択肢を更新
+                     * 
+                     * @returns {void}
+                     */
+                    updateStageLookupOptions() {
+                        // ステージのlookupコンポーネントを探す
+                        const stageLookupComponents = document.querySelectorAll('v-lookup-component');
+                        stageLookupComponents.forEach(component => {
+                            if (component.attribute && component.attribute.code === 'lead_pipeline_stage_id') {
+                                // コンポーネントのsearchedResultsを更新
+                                component.searchedResults = this.pipelineStages;
+                                // コンポーネントを強制的に再レンダリング
+                                component.$forceUpdate();
+                            }
+                        });
                     },
                 },
             });
