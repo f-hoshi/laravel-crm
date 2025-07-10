@@ -133,12 +133,10 @@ class LeadRepository extends Repository
 
         $lead = parent::create($data);
 
-        // パイプライン関連の属性を除外してattribute_valuesを保存
         $attributeData = array_merge($data, [
             'entity_id' => $lead->id,
         ]);
         
-        // lead_pipeline_idとlead_pipeline_stage_idを除外
         unset($attributeData['lead_pipeline_id']);
         unset($attributeData['lead_pipeline_stage_id']);
         
@@ -227,12 +225,10 @@ class LeadRepository extends Repository
             return $lead;
         }
 
-        // パイプライン関連の属性を除外してattribute_valuesを保存
         $attributeData = array_merge($data, [
             'entity_id' => $lead->id,
         ]);
         
-        // lead_pipeline_idとlead_pipeline_stage_idを除外
         unset($attributeData['lead_pipeline_id']);
         unset($attributeData['lead_pipeline_stage_id']);
         

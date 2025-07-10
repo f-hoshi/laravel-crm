@@ -361,7 +361,8 @@
                     updateStageLookupOptions() {
                         // ステージのlookupコンポーネントを探す
                         const stageLookupComponents = document.querySelectorAll('v-lookup-component');
-                        stageLookupComponents.forEach(component => {
+                        
+                        stageLookupComponents.forEach((component, index) => {
                             if (component.attribute && component.attribute.code === 'lead_pipeline_stage_id') {
                                 // コンポーネントのsearchedResultsを更新
                                 component.searchedResults = this.pipelineStages;
