@@ -153,6 +153,7 @@
                         })
                         .catch(error => {});
                 },
+
                 prepare() {
                     // チャート作成中の場合、処理をスキップ
                     if (this.isChartCreating) {
@@ -160,23 +161,12 @@
                         return;
                     }
 
-                    // 既存のチャートを破棄
-                    if (this.chart) {
-                        this.chart.destroy();
-                        this.chart = undefined;
-                    }
-
-                    // データがない場合は終了
-                    if (!this.report.statistics || 
-                        !this.report.statistics.total_won_revenue || 
-                        !this.report.statistics.total_lost_revenue) {
-                        console.log('Revenue data not available');
-                        return;
-                    }
-
                     // チャート作成フラグを設定
                     this.isChartCreating = true;
-
+                    if (this.chart) {
+                    // 既存のチャートを破棄
+                        this.chart = undefined;
+                    }
                     // Canvas要素を取得
                     const canvasElement = document.getElementById(this.chartId);
                     if (!canvasElement) {
@@ -190,8 +180,6 @@
                         console.error('Revenue chart canvas element not in DOM');
                         this.isChartCreating = false;
                         return;
-                    }
-
                     try {
                         const ctx = canvasElement.getContext('2d');
                         if (!ctx) {
@@ -199,10 +187,6 @@
                             this.isChartCreating = false;
                             return;
                         }
-                    }
-                    const ctx = canvasElement.getContext('2d');
-                    this.chart = new Chart(ctx, {
-                        type: 'bar',
 
                         data: {
                             labels: [
@@ -272,6 +256,10 @@
                                 padding: {
                                     left: 0,
                                     right: 0,
+                                    top: 0,
+                                    bottom: 0
+                                }
+                            }
                                 layout: {
                                     padding: {
                                         left: 0,
@@ -293,8 +281,6 @@
                         console.error('Error creating revenue chart:', error);
                         this.isChartCreating = false;
                     }
-                    });
-                }
             }
         });
     </script>
