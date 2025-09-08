@@ -113,13 +113,17 @@
         app.component('v-dashboard-revenue-stats', {
             template: '#v-dashboard-revenue-stats-template',
 
+            data() {
+                return {
                     report: [],
 
                     isLoading: true,
 
                     chart: undefined,
-                    chartId: `revenue-chart-${Math.random().toString(36).substr(2, 9)}`,
                     isChartCreating: false,
+                    chartId: `revenue-chart-${Math.random().toString(36).substr(2, 9)}`,
+                }
+            },
 
             mounted() {
                 this.getStats({});
@@ -149,10 +153,6 @@
                         })
                         .catch(error => {});
                 },
-
-                prepare() {
-                    if (this.chart) {
-                        this.chart.destroy();
                 prepare() {
                     // チャート作成中の場合、処理をスキップ
                     if (this.isChartCreating) {
@@ -199,74 +199,79 @@
                             this.isChartCreating = false;
                             return;
                         }
+                    }
+                    const ctx = canvasElement.getContext('2d');
+                    this.chart = new Chart(ctx, {
+                        type: 'bar',
 
-                        this.chart = new Chart(ctx, {
-                            type: 'bar',
+                        data: {
+                            labels: [
+                            "@lang('admin::app.dashboard.index.revenue.won-revenue')",
+                            "@lang('admin::app.dashboard.index.revenue.lost-revenue')"
+                        ],
 
-                            data: {
-                                labels: [
-                                    "@lang('admin::app.dashboard.index.revenue.won-revenue')",
-                                    "@lang('admin::app.dashboard.index.revenue.lost-revenue')"
+                            datasets: [{
+                                axis: 'y',
+                                data: [
+                                    this.report.statistics.total_won_revenue.current,
+                                    this.report.statistics.total_lost_revenue.current
                                 ],
 
-                                datasets: [{
-                                    axis: 'y',
-                                    data: [
-                                        this.report.statistics.total_won_revenue.current,
-                                        this.report.statistics.total_lost_revenue.current
-                                    ],
+                                backgroundColor: [
+                                    'rgba(34, 197, 94, 0.8)',
+                                    'rgba(239, 68, 68, 0.8)',
+                                ],
 
-                                    backgroundColor: [
-                                        'rgba(34, 197, 94, 0.8)',
-                                        'rgba(239, 68, 68, 0.8)',
-                                    ],
+                                barPercentage: 0.8,
+                                categoryPercentage: 0.7,
+                            }],
+                        },
 
-                                    barPercentage: 0.8,
-                                    categoryPercentage: 0.7,
-                                }],
+                        options: {
+                            aspectRatio: 5,
+
+                            indexAxis: 'y',
+
+                            plugins: {
+                                legend: {
+                                    display: false,
+                                },
                             },
 
-                            options: {
-                                aspectRatio: 5,
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
 
-                                indexAxis: 'y',
-
-                                plugins: {
-                                    legend: {
-                                        display: false,
-                                    },
-                                },
-
-                                scales: {
-                                    x: {
-                                        beginAtZero: true,
-
-                                        ticks: {
-                                            stepSize: 500,
-                                        },
-
-                                        border: {
-                                            dash: [8, 4],
-                                        }
+                                    ticks: {
+                                        stepSize: 500,
                                     },
 
-                                    y: {
-                                        beginAtZero: true,
-
-                                        ticks: {
-                                            display: false,
-                                        },
-
-                                        border: {
-                                            dash: [8, 4],
-                                        }
+                                    border: {
+                                        dash: [8, 4],
                                     }
                                 },
 
-                                maintainAspectRatio: true,
+                                y: {
+                                    beginAtZero: true,
 
-                                responsive: true,
+                                    ticks: {
+                                        display: false,
+                                    },
 
+                                    border: {
+                                        dash: [8, 4],
+                                    }
+                                }
+                            },
+
+                            maintainAspectRatio: true,
+
+                            responsive: true,
+
+                            layout: {
+                                padding: {
+                                    left: 0,
+                                    right: 0,
                                 layout: {
                                     padding: {
                                         left: 0,
@@ -288,5 +293,9 @@
                         console.error('Error creating revenue chart:', error);
                         this.isChartCreating = false;
                     }
+                    });
                 }
+            }
+        });
+    </script>
 @endPushOnce
