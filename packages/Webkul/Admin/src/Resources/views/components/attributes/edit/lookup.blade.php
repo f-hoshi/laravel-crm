@@ -49,10 +49,9 @@
                     <!-- Selected Item or Placeholder Text -->
                     <span
                         class="overflow-hidden text-ellipsis"
-                        :title="selectedItem?.name"
-                        @{{ selectedItem?.name !== "" ? selectedItem?.name : (attribute.code === 'lead_pipeline_stage_id' && !selectedPipelineId ? "パイプラインを先に選択してください" : "@lang('admin::app.components.attributes.lookup.click-to-add')") }}
+                        :title="selectedItem && selectedItem.name ? selectedItem.name : ''"
+                        {{ selectedItem && selectedItem.name !== "" ? selectedItem.name : "@lang('admin::app.components.attributes.lookup.click-to-add')" }}
                     </span>
-
                     <!-- Icons Container -->
                     <div class="flex items-center gap-2">
                         <!-- Close Icon -->
