@@ -154,3 +154,134 @@
                         .catch(error => {});
                 },
 
+                prepare() {
+                    // チャート作成中の場合、処理をスキップ
+                    if (this.isChartCreating) {
+                        console.log('Revenue chart creation already in progress, skipping...');
+                        return;
+                    }
+
+                    // チャート作成フラグを設定
+                    this.isChartCreating = true;
+                    if (this.chart) {
+                    // 既存のチャートを破棄
+                        this.chart = undefined;
+                    }
+                    // Canvas要素を取得
+                    const canvasElement = document.getElementById(this.chartId);
+                    if (!canvasElement) {
+                        console.error('Revenue chart canvas element not found with ID:', this.chartId);
+                        this.isChartCreating = false;
+                        return;
+                    }
+
+                    // Canvas要素がDOMに存在することを確認
+                    if (!document.body.contains(canvasElement)) {
+                        console.error('Revenue chart canvas element not in DOM');
+                        this.isChartCreating = false;
+                        return;
+                    try {
+                        const ctx = canvasElement.getContext('2d');
+                        if (!ctx) {
+                            console.error('Cannot get 2D context from revenue chart canvas');
+                            this.isChartCreating = false;
+                            return;
+                        }
+
+                        data: {
+                            labels: [
+                            "@lang('admin::app.dashboard.index.revenue.won-revenue')",
+                            "@lang('admin::app.dashboard.index.revenue.lost-revenue')"
+                        ],
+
+                            datasets: [{
+                                axis: 'y',
+                                data: [
+                                    this.report.statistics.total_won_revenue.current,
+                                    this.report.statistics.total_lost_revenue.current
+                                ],
+
+                                backgroundColor: [
+                                    'rgba(34, 197, 94, 0.8)',
+                                    'rgba(239, 68, 68, 0.8)',
+                                ],
+
+                                barPercentage: 0.8,
+                                categoryPercentage: 0.7,
+                            }],
+                        },
+
+                        options: {
+                            aspectRatio: 5,
+
+                            indexAxis: 'y',
+
+                            plugins: {
+                                legend: {
+                                    display: false,
+                                },
+                            },
+
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+
+                                    ticks: {
+                                        stepSize: 500,
+                                    },
+
+                                    border: {
+                                        dash: [8, 4],
+                                    }
+                                },
+
+                                y: {
+                                    beginAtZero: true,
+
+                                    ticks: {
+                                        display: false,
+                                    },
+
+                                    border: {
+                                        dash: [8, 4],
+                                    }
+                                }
+                            },
+
+                            maintainAspectRatio: true,
+
+                            responsive: true,
+
+                            layout: {
+                                padding: {
+                                    left: 0,
+                                    right: 0,
+                                    top: 0,
+                                    bottom: 0
+                                }
+                            }
+                                layout: {
+                                    padding: {
+                                        left: 0,
+                                        right: 0,
+                                        top: 0,
+                                        bottom: 0
+                                    }
+                                },
+
+                                animation: {
+                                    duration: 0
+                                }
+                            }
+                        });
+
+                        console.log('Revenue chart created successfully');
+                        this.isChartCreating = false;
+                    } catch (error) {
+                        console.error('Error creating revenue chart:', error);
+                        this.isChartCreating = false;
+                    }
+            }
+        });
+    </script>
+@endPushOnce
