@@ -136,10 +136,10 @@ class LeadRepository extends Repository
         $attributeData = array_merge($data, [
             'entity_id' => $lead->id,
         ]);
-        
+
         unset($attributeData['lead_pipeline_id']);
         unset($attributeData['lead_pipeline_stage_id']);
-        
+
         $this->attributeValueRepository->save($attributeData);
 
         if (isset($data['products'])) {
@@ -228,10 +228,10 @@ class LeadRepository extends Repository
         $attributeData = array_merge($data, [
             'entity_id' => $lead->id,
         ]);
-        
+
         unset($attributeData['lead_pipeline_id']);
         unset($attributeData['lead_pipeline_stage_id']);
-        
+
         $this->attributeValueRepository->save($attributeData);
 
         $previousProductIds = $lead->products()->pluck('id');

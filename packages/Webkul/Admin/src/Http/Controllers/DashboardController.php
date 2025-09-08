@@ -44,9 +44,9 @@ class DashboardController extends Controller
         $defaultPipeline = $this->pipelineRepository->getDefaultPipeline();
 
         return view('admin::dashboard.index')->with([
-            'startDate' => $this->dashboardHelper->getStartDate(),
-            'endDate'   => $this->dashboardHelper->getEndDate(),
-            'pipelines' => $pipelines,
+            'startDate'       => $this->dashboardHelper->getStartDate(),
+            'endDate'         => $this->dashboardHelper->getEndDate(),
+            'pipelines'       => $pipelines,
             'defaultPipeline' => $defaultPipeline,
         ]);
     }
@@ -82,7 +82,7 @@ class DashboardController extends Controller
         $defaultPipeline = $this->pipelineRepository->getDefaultPipeline();
 
         return response()->json([
-            'pipelines' => $pipelines,
+            'pipelines'        => $pipelines,
             'default_pipeline' => $defaultPipeline,
         ]);
     }
