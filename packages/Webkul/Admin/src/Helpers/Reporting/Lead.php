@@ -346,11 +346,16 @@ class Lead extends AbstractReporting
             ->leftJoin('lead_pipeline_stages', 'leads.lead_pipeline_stage_id', '=', 'lead_pipeline_stages.id')
             ->whereNotIn('lead_pipeline_stage_id', $this->wonStageIds)
             ->whereNotIn('lead_pipeline_stage_id', $this->lostStageIds)
-            ->whereBetween('leads.created_at', [$this->startDate, $this->endDate])
-            ->groupBy('lead_pipeline_stage_id')
-            ->orderByDesc('total');
+            ->whereBetween('leads.created_at', [$this->startDate, $this->endDate]);
             
-        $query = $this->addPipelineFilter($query);
+        // Apply pipeline filter to both leads and stages tables
+        if ($this->pipelineId) {
+            $query->where('leads.lead_pipeline_id', $this->pipelineId)
+                  ->where('lead_pipeline_stages.lead_pipeline_id', $this->pipelineId);
+        }
+        
+        $query->groupBy('lead_pipeline_stage_id')
+              ->orderByDesc('total');
 
         return $query->get();
     }

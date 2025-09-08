@@ -82,7 +82,7 @@
                     <!-- Bar Chart -->
                     <div class="flex w-full max-w-full flex-col gap-4">
                         <canvas
-                            :id="$.uid + '_chart'"
+                            :id="chartId"
                             class="w-full max-w-full items-end"
                         ></canvas>
 
@@ -120,6 +120,7 @@
                     isLoading: true,
                     
                     chart: undefined,
+                    chartId: `revenue-chart-${Math.random().toString(36).substr(2, 9)}`,
                 }
             },
 
@@ -157,7 +158,13 @@
                         this.chart.destroy();
                     }
 
-                    this.chart = new Chart(document.getElementById(this.$.uid + '_chart'), {
+                    const canvasElement = document.getElementById(this.chartId);
+                    if (!canvasElement) {
+                        console.error('Revenue chart canvas element not found');
+                        return;
+                    }
+                    const ctx = canvasElement.getContext('2d');
+                    this.chart = new Chart(ctx, {
                         type: 'bar',
                         
                         data: {
