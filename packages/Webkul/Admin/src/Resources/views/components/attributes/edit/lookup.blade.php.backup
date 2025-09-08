@@ -174,7 +174,6 @@
                     lookupEntityRoute: `{{ route('admin.settings.attributes.lookup_entity') }}/${this.attribute.lookup_type}`,
 
                     isSearching: false,
-                    selectedPipelineId: null,
                 };
             },
 
@@ -192,16 +191,6 @@
                             this.$emit('pipeline-changed', newVal.id);
                         }
                     }, { deep: true });
-                }
-                // ステージのlookupコンポーネントにパイプライン変更イベントリスナーを追加
-                if (this.attribute.code === 'lead_pipeline_stage_id') {
-                    this.$emitter.on('pipeline-changed', this.onPipelineChanged);
-                }
-            },
-            beforeUnmount() {
-                // ステージのlookupコンポーネントのイベントリスナーをクリーンアップ
-                if (this.attribute.code === 'lead_pipeline_stage_id') {
-                    this.$emitter.off('pipeline-changed', this.onPipelineChanged);
                 }
             },
 
@@ -255,7 +244,7 @@
                     this.isSearching = true;
 
                     this.$axios.get(this.searchRoute, {
-                            params: { query: this.searchTerm, pipeline_id: this.selectedPipelineId }
+                            params: { query: this.searchTerm }
                         })
                         .then (response => {
                             this.searchedResults = response.data;
@@ -268,7 +257,7 @@
                     this.isSearching = true;
 
                     this.$axios.get(this.searchRoute, {
-                            params: { query: '', pipeline_id: this.selectedPipelineId }
+                            params: { query: '' }
                         })
                         .then (response => {
                             this.searchedResults = response.data;
@@ -325,30 +314,6 @@
                     };
 
                     this.$emit('lookup-removed', this.selectedItem);
-                },
-
-                /**
-                 * パイプライン変更時の処理
-                 * 
-                 * @param {Number} pipelineId
-                 * 
-                 * @returns {void}
-                 */
-                onPipelineChanged(pipelineId) {
-                    this.selectedPipelineId = pipelineId;
-                    
-                    // ステージのlookupコンポーネントの場合、選択をクリアして検索結果をリセット
-                    if (this.attribute.code === 'lead_pipeline_stage_id') {
-                        this.selectedItem = {
-                            id: '',
-                            name: ''
-                        };
-                        this.searchedResults = [];
-                        this.searchTerm = '';
-                        
-                        // 新しいパイプラインのステージを読み込む
-                        this.loadInitialData();
-                    }
                 },
             },
         });

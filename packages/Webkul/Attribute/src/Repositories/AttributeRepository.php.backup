@@ -143,17 +143,9 @@ class AttributeRepository extends Repository
             return $userRepository->where('users.name', 'like', '%'.urldecode($query).'%')->get();
         }
 
-        $conditions = [[$lookup['label_column'] ?? 'name', 'like', '%'.urldecode($query).'%']];
-
-        // パイプラインステージの場合、パイプラインIDでフィルタリング
-        if ($lookup === 'lead_pipeline_stages' && request()->has('pipeline_id')) {
-            $pipelineId = request()->input('pipeline_id');
-            if ($pipelineId) {
-                $conditions[] = ['lead_pipeline_id', '=', $pipelineId];
-            }
-        }
-
-        return app($lookup['repository'])->findWhere($conditions, $columns);
+        return app($lookup['repository'])->findWhere([
+            [$lookup['label_column'] ?? 'name', 'like', '%'.urldecode($query).'%'],
+        ], $columns);
     }
 
     /**
