@@ -1442,7 +1442,7 @@ return [
                     'delete-failed'  => 'Location can not be deleted.',
                     'delete-success' => 'Location deleted successfully.',
                     'name'           => 'Name',
-                    'save-btn'       => 'Save',
+                    'save-btn'       => '保存',
                 ],
 
                 'general-information' => [
@@ -2043,14 +2043,14 @@ return [
             ],
 
             'stages' => [
-                'won-lost'       => 'Won/Lost',
-                'won'            => 'Won',
-                'lost'           => 'Lost',
-                'need-more-info' => 'Need More Details',
-                'closed-at'      => 'Closed At',
-                'won-value'      => 'Won Value',
-                'lost-reason'    => 'Lost Reason',
-                'save-btn'       => 'Save',
+                'won-lost'       => '受注/失注',
+                'won'            => '受注',
+                'lost'           => '失注',
+                'need-more-info' => '詳細情報が必要',
+                'closed-at'      => 'クローズ日時',
+                'won-value'      => '受注金額',
+                'lost-reason'    => '失注理由',
+                'save-btn'       => '保存',
             ],
 
             'tags' => [
