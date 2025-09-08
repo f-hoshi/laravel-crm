@@ -208,8 +208,10 @@
                     selectPipeline(pipeline) {
                         console.log('Selecting pipeline:', pipeline);
                         this.selectedPipeline = pipeline;
-                        this.filters.pipeline_id = pipeline?.id || null;
+                        this.filters.pipeline_id = pipeline ? pipeline.id : null;
                         console.log('Updated filters:', this.filters);
                     }
+            });
+        </script>
     @endPushOnce
 </x-admin::layouts>
