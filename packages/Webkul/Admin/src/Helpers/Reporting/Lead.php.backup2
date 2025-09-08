@@ -51,27 +51,15 @@ class Lead extends AbstractReporting
      */
     protected function initializeStageIds(): void
     {
-        $baseQuery = $this->stageRepository;
+        $stageQuery = $this->stageRepository;
         
         if ($this->pipelineId) {
-            $baseQuery = $baseQuery->where('lead_pipeline_id', $this->pipelineId);
+            $stageQuery = $stageQuery->where('lead_pipeline_id', $this->pipelineId);
         }
 
-        $this->allStageIds = $baseQuery->pluck('id')->toArray();
-        
-        // Reset query for won stages
-        $wonQuery = $this->stageRepository;
-        if ($this->pipelineId) {
-            $wonQuery = $wonQuery->where('lead_pipeline_id', $this->pipelineId);
-        }
-        $this->wonStageIds = $wonQuery->where('code', 'won')->pluck('id')->toArray();
-        
-        // Reset query for lost stages
-        $lostQuery = $this->stageRepository;
-        if ($this->pipelineId) {
-            $lostQuery = $lostQuery->where('lead_pipeline_id', $this->pipelineId);
-        }
-        $this->lostStageIds = $lostQuery->where('code', 'lost')->pluck('id')->toArray();
+        $this->allStageIds = $stageQuery->pluck('id')->toArray();
+        $this->wonStageIds = $stageQuery->where('code', 'won')->pluck('id')->toArray();
+        $this->lostStageIds = $stageQuery->where('code', 'lost')->pluck('id')->toArray();
     }
 
     /**

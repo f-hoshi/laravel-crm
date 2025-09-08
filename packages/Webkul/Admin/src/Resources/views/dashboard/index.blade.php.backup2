@@ -182,15 +182,17 @@
                 },
 
                 watch: {
-                watch: {
                     filters: {
-                        handler(newFilters, oldFilters) {
-                            console.log('Dashboard filters updated:', newFilters);
-                            this.$emitter.emit('reporting-filter-updated', newFilters);
+                        handler() {
+                            this.$emitter.emit('reporting-filter-updated', this.filters);
                         },
                         deep: true
                     }
                 },
+
+                methods: {
+                    loadPipelines() {
+                        this.$axios.get("{{ route('admin.dashboard.pipelines') }}")
                             .then(response => {
                                 this.pipelines = response.data.pipelines;
                                 
@@ -207,9 +209,9 @@
                     selectPipeline(pipeline) {
                         this.selectedPipeline = pipeline;
                         this.filters.pipeline_id = pipeline?.id || null;
-                    selectPipeline(pipeline) {
-                        console.log('Selecting pipeline:', pipeline);
-                        this.selectedPipeline = pipeline;
-                        this.filters.pipeline_id = pipeline?.id || null;
-                        console.log('Updated filters:', this.filters);
                     }
+                }
+            });
+        </script>
+    @endPushOnce
+</x-admin::layouts>
