@@ -424,8 +424,9 @@ class Lead extends AbstractReporting
 
         $query = $this->addPipelineFilter($query);
 
+
         if (! empty($stageIds)) {
-            $query->whereIn("'lead_pipeline_stage_id"', $stageIds);
+            $query->whereIn('lead_pipeline_stage_id', $stageIds);
         }
 
         $results = $query->get();
