@@ -52,20 +52,20 @@ class Lead extends AbstractReporting
     protected function initializeStageIds(): void
     {
         $baseQuery = $this->stageRepository;
-        
+
         if ($this->pipelineId) {
             $baseQuery = $baseQuery->where('lead_pipeline_id', $this->pipelineId);
         }
 
         $this->allStageIds = $baseQuery->pluck('id')->toArray();
-        
+
         // Reset query for won stages
         $wonQuery = $this->stageRepository;
         if ($this->pipelineId) {
             $wonQuery = $wonQuery->where('lead_pipeline_id', $this->pipelineId);
         }
         $this->wonStageIds = $wonQuery->where('code', 'won')->pluck('id')->toArray();
-        
+
         // Reset query for lost stages
         $lostQuery = $this->stageRepository;
         if ($this->pipelineId) {
@@ -76,9 +76,6 @@ class Lead extends AbstractReporting
 
     /**
      * Set pipeline ID for filtering.
-     *
-     * @param int|null $pipelineId
-     * @return void
      */
     public function setPipelineId(?int $pipelineId): void
     {
@@ -94,7 +91,7 @@ class Lead extends AbstractReporting
         if ($this->pipelineId) {
             $query->where('lead_pipeline_id', $this->pipelineId);
         }
-        
+
         return $query;
     }
 
@@ -151,14 +148,13 @@ class Lead extends AbstractReporting
      *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return int
      */
     public function getTotalLeads($startDate, $endDate): int
     {
         $query = $this->leadRepository
             ->resetModel()
             ->whereBetween('created_at', [$startDate, $endDate]);
-            
+
         $query = $this->addPipelineFilter($query);
 
         return $query->count();
@@ -181,7 +177,6 @@ class Lead extends AbstractReporting
      *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return float
      */
     public function getTotalWonLeadValue($startDate, $endDate): float
     {
@@ -189,7 +184,7 @@ class Lead extends AbstractReporting
             ->resetModel()
             ->whereIn('lead_pipeline_stage_id', $this->wonStageIds)
             ->whereBetween('closed_at', [$startDate, $endDate]);
-            
+
         $query = $this->addPipelineFilter($query);
 
         return $query->sum('lead_value') ?: 0;
@@ -212,7 +207,6 @@ class Lead extends AbstractReporting
      *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return float
      */
     public function getTotalLostLeadValue($startDate, $endDate): float
     {
@@ -220,7 +214,7 @@ class Lead extends AbstractReporting
             ->resetModel()
             ->whereIn('lead_pipeline_stage_id', $this->lostStageIds)
             ->whereBetween('closed_at', [$startDate, $endDate]);
-            
+
         $query = $this->addPipelineFilter($query);
 
         return $query->sum('lead_value') ?: 0;
@@ -243,14 +237,13 @@ class Lead extends AbstractReporting
      *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return float
      */
     public function getAverageLeadValue($startDate, $endDate): float
     {
         $query = $this->leadRepository
             ->resetModel()
             ->whereBetween('created_at', [$startDate, $endDate]);
-            
+
         $query = $this->addPipelineFilter($query);
 
         return $query->avg('lead_value') ?: 0;
@@ -273,16 +266,15 @@ class Lead extends AbstractReporting
      *
      * @param  \Carbon\Carbon  $startDate
      * @param  \Carbon\Carbon  $endDate
-     * @return float
      */
     public function getAverageLeadsPerDay($startDate, $endDate): float
     {
         $totalDays = $startDate->diffInDays($endDate) ?: 1;
-        
+
         $query = $this->leadRepository
             ->resetModel()
             ->whereBetween('created_at', [$startDate, $endDate]);
-            
+
         $query = $this->addPipelineFilter($query);
 
         $totalLeads = $query->count();
@@ -305,7 +297,7 @@ class Lead extends AbstractReporting
             ->whereIn('lead_pipeline_stage_id', $this->wonStageIds)
             ->whereBetween('leads.created_at', [$this->startDate, $this->endDate])
             ->groupBy('lead_source_id');
-            
+
         $query = $this->addPipelineFilter($query);
 
         return $query->get();
@@ -326,7 +318,7 @@ class Lead extends AbstractReporting
             ->whereIn('lead_pipeline_stage_id', $this->wonStageIds)
             ->whereBetween('leads.created_at', [$this->startDate, $this->endDate])
             ->groupBy('lead_type_id');
-            
+
         $query = $this->addPipelineFilter($query);
 
         return $query->get();
@@ -349,7 +341,7 @@ class Lead extends AbstractReporting
             ->whereBetween('leads.created_at', [$this->startDate, $this->endDate])
             ->groupBy('lead_pipeline_stage_id')
             ->orderByDesc('total');
-            
+
         $query = $this->addPipelineFilter($query);
 
         return $query->get();
