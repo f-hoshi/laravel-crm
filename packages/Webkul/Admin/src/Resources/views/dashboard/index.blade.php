@@ -108,7 +108,7 @@
                             class="flex cursor-pointer appearance-none items-center justify-between gap-x-2 rounded-md border bg-white px-2.5 py-[7px] text-center leading-6 text-gray-600 transition-all marker:shadow hover:border-gray-400 focus:border-gray-400 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-400 dark:focus:border-gray-400"
                         >
                             <span class="whitespace-nowrap">
-                                @{{ selectedPipeline?.name || '@lang('admin::app.dashboard.index.all-pipelines')' }}
+                                @{{ selectedPipeline ? selectedPipeline.name : null || '@lang('admin::app.dashboard.index.all-pipelines')' }}
                             </span>
                             
                             <span class="icon-down-arrow text-2xl"></span>
@@ -182,15 +182,18 @@
                 },
 
                 watch: {
-                watch: {
                     filters: {
                         handler(newFilters, oldFilters) {
                             console.log('Dashboard filters updated:', newFilters);
-                            this.$emitter.emit('reporting-filter-updated', newFilters);
+                            this.$emitter.emit('reporting-filter-updated', this.filters);
                         },
                         deep: true
                     }
                 },
+
+                methods: {
+                    loadPipelines() {
+                        this.$axios.get("{{ route('admin.dashboard.pipelines') }}")
                             .then(response => {
                                 this.pipelines = response.data.pipelines;
                                 
@@ -205,12 +208,12 @@
                     },
 
                     selectPipeline(pipeline) {
-                    selectPipeline(pipeline) {
                         console.log('Selecting pipeline:', pipeline);
                         this.selectedPipeline = pipeline;
                         this.filters.pipeline_id = pipeline ? pipeline.id : null;
                         console.log('Updated filters:', this.filters);
                     }
+                }
             });
         </script>
     @endPushOnce
