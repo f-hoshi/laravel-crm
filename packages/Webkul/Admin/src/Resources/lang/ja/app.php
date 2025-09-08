@@ -2181,10 +2181,10 @@ return [
 
     'dashboard' => [
         'index' => [
-            'title' => 'ダッシュボード',
+            'title'         => 'ダッシュボード',
             'all-pipelines' => 'すべてのパイプライン',
-            'start-date' => '開始日',
-            'end-date' => '終了日',
+            'start-date'    => '開始日',
+            'end-date'      => '終了日',
 
             'revenue' => [
                 'lost-revenue' => '失われた収益',

@@ -34,9 +34,6 @@ class Dashboard
 
     /**
      * Set pipeline ID for filtering.
-     *
-     * @param int|null $pipelineId
-     * @return void
      */
     public function setPipelineId(?int $pipelineId): void
     {

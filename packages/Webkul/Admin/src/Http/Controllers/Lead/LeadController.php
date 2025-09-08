@@ -165,12 +165,12 @@ class LeadController extends Controller
         if (isset($data['lead_pipeline_id']) && isset($data['lead_pipeline_stage_id'])) {
             // 指定されたステージが指定されたパイプラインに属しているかチェック
             $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
-            
+
             if ($stage->lead_pipeline_id != $data['lead_pipeline_id']) {
                 // ステージが異なるパイプラインに属している場合、指定されたパイプラインの最初のステージを使用
                 $pipeline = $this->pipelineRepository->findOrFail($data['lead_pipeline_id']);
                 $firstStage = $pipeline->stages()->orderBy('sort_order')->first();
-                
+
                 if ($firstStage) {
                     $data['lead_pipeline_stage_id'] = $firstStage->id;
                 }
@@ -183,7 +183,7 @@ class LeadController extends Controller
             // パイプラインのみ指定されている場合、そのパイプラインの最初のステージを取得
             $pipeline = $this->pipelineRepository->findOrFail($data['lead_pipeline_id']);
             $stage = $pipeline->stages()->orderBy('sort_order')->first();
-            
+
             if ($stage) {
                 $data['lead_pipeline_stage_id'] = $stage->id;
             }
@@ -251,12 +251,12 @@ class LeadController extends Controller
         if (isset($data['lead_pipeline_id']) && isset($data['lead_pipeline_stage_id'])) {
             // 指定されたステージが指定されたパイプラインに属しているかチェック
             $stage = $this->stageRepository->findOrFail($data['lead_pipeline_stage_id']);
-            
+
             if ($stage->lead_pipeline_id != $data['lead_pipeline_id']) {
                 // ステージが異なるパイプラインに属している場合、指定されたパイプラインの最初のステージを使用
                 $pipeline = $this->pipelineRepository->findOrFail($data['lead_pipeline_id']);
                 $firstStage = $pipeline->stages()->orderBy('sort_order')->first();
-                
+
                 if ($firstStage) {
                     $data['lead_pipeline_stage_id'] = $firstStage->id;
                 }
@@ -269,7 +269,7 @@ class LeadController extends Controller
             // パイプラインのみ指定されている場合、そのパイプラインの最初のステージを取得
             $pipeline = $this->pipelineRepository->findOrFail($data['lead_pipeline_id']);
             $stage = $pipeline->stages()->orderBy('sort_order')->first();
-            
+
             if ($stage) {
                 $data['lead_pipeline_stage_id'] = $stage->id;
             }
