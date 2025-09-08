@@ -205,11 +205,11 @@
                     },
 
                     selectPipeline(pipeline) {
-                        this.selectedPipeline = pipeline;
-                        this.filters.pipeline_id = pipeline?.id || null;
                     selectPipeline(pipeline) {
                         console.log('Selecting pipeline:', pipeline);
                         this.selectedPipeline = pipeline;
                         this.filters.pipeline_id = pipeline?.id || null;
                         console.log('Updated filters:', this.filters);
                     }
+    @endPushOnce
+</x-admin::layouts>
