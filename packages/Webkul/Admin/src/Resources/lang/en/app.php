@@ -2221,6 +2221,9 @@ return [
     'dashboard' => [
         'index' => [
             'title' => 'Dashboard',
+            'all-pipelines' => 'All Pipelines',
+            'start-date' => 'Start Date',
+            'end-date' => 'End Date',
 
             'revenue' => [
                 'lost-revenue' => 'Lost Revenue',

@@ -134,6 +134,19 @@
                                 ]"
                             />
 
+                            <!-- Pipeline and Stage Selection -->
+                            <div class="flex gap-4 max-sm:flex-wrap">
+                                <div class="w-full">
+                                    <x-admin::attributes
+                                        :custom-attributes="app('Webkul\Attribute\Repositories\AttributeRepository')->findWhere([
+                                            ['code', 'IN', ['lead_pipeline_id', 'lead_pipeline_stage_id']],
+                                            'entity_type' => 'leads',
+                                            'quick_add'   => 1
+                                        ])"
+                                    />
+                                </div>
+                            </div>
+
                             <!-- Lead Details Other input fields -->
                             <div class="flex gap-4 max-sm:flex-wrap">
                                 <div class="w-full">
@@ -239,7 +252,22 @@
                             { id: 'contact-person', label: '@lang('admin::app.leads.create.contact-person')' },
                             { id: 'products', label: '@lang('admin::app.leads.create.products')' }
                         ],
+
+                        // パイプライン・ステージ制御用
+                        selectedPipelineId: null,
+                        pipelineStages: [],
+                        selectedStageId: null,
                     };
+                },
+
+                mounted() {
+                    // パイプライン変更イベントをリッスン
+                    this.$emitter.on('pipeline-changed', this.onPipelineChanged);
+                },
+
+                beforeUnmount() {
+                    // イベントリスナーをクリーンアップ
+                    this.$emitter.off('pipeline-changed', this.onPipelineChanged);
                 },
 
                 methods: {
@@ -256,6 +284,101 @@
                         if (section) {
                             section.scrollIntoView({ behavior: 'smooth' });
                         }
+                    },
+
+                    /**
+                     * パイプライン変更時の処理
+                     * 
+                     * @param {Number} pipelineId
+                     * 
+                     * @returns {void}
+                     */
+                    onPipelineChanged(pipelineId) {
+                        this.selectedPipelineId = pipelineId;
+                        
+                        // ステージのlookupコンポーネントをクリア
+                        this.clearStageLookup();
+                        
+                        // パイプラインのステージ一覧を取得
+                        this.$axios.get(`{{ route('admin.leads.pipeline.stages', ['pipelineId' => ':pipelineId']) }}`.replace(':pipelineId', pipelineId))
+                            .then(response => {
+                                this.pipelineStages = response.data;
+                                
+                                // ステージを最初のものにリセット
+                                if (this.pipelineStages.length > 0) {
+                                    this.selectedStageId = this.pipelineStages[0].id;
+                                    
+                                    // ステージのlookupコンポーネントを更新
+                                    this.updateStageLookup(this.selectedStageId);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Failed to fetch pipeline stages:', error);
+                            });
+                    },
+
+                    /**
+                     * ステージのlookupコンポーネントをクリア
+                     * 
+                     * @returns {void}
+                     */
+                    clearStageLookup() {
+                        // ステージのlookupコンポーネントを探してクリア
+                        const stageLookup = document.querySelector('input[name="lead_pipeline_stage_id"]');
+                        if (stageLookup) {
+                            stageLookup.value = '';
+                            // Vueコンポーネントの更新をトリガー
+                            stageLookup.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+
+                        // ステージのlookupコンポーネントの選択肢もクリア
+                        const stageLookupComponents = document.querySelectorAll('v-lookup-component');
+                        stageLookupComponents.forEach(component => {
+                            if (component.attribute && component.attribute.code === 'lead_pipeline_stage_id') {
+                                component.searchedResults = [];
+                                component.selectedItem = { id: '', name: '' };
+                                component.$forceUpdate();
+                            }
+                        });
+                    },
+
+                    /**
+                     * ステージのlookupコンポーネントを更新
+                     * 
+                     * @param {Number} stageId
+                     * 
+                     * @returns {void}
+                     */
+                    updateStageLookup(stageId) {
+                        // ステージのlookupコンポーネントを探して更新
+                        const stageLookup = document.querySelector('input[name="lead_pipeline_stage_id"]');
+                        if (stageLookup) {
+                            stageLookup.value = stageId;
+                            // Vueコンポーネントの更新をトリガー
+                            stageLookup.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+
+                        // ステージのlookupコンポーネントの選択肢も更新
+                        this.updateStageLookupOptions();
+                    },
+
+                    /**
+                     * ステージのlookupコンポーネントの選択肢を更新
+                     * 
+                     * @returns {void}
+                     */
+                    updateStageLookupOptions() {
+                        // ステージのlookupコンポーネントを探す
+                        const stageLookupComponents = document.querySelectorAll('v-lookup-component');
+                        
+                        stageLookupComponents.forEach((component, index) => {
+                            if (component.attribute && component.attribute.code === 'lead_pipeline_stage_id') {
+                                // コンポーネントのsearchedResultsを更新
+                                component.searchedResults = this.pipelineStages;
+                                // コンポーネントを強制的に再レンダリング
+                                component.$forceUpdate();
+                            }
+                        });
                     },
                 },
             });

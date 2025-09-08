@@ -7,7 +7,7 @@
         id="v-charts-bar-template"
     >
         <canvas
-            :id="$.uid + '_chart'"
+            :id="chartId"
             class="flex w-full max-w-full items-end"
             :style="'aspect-ratio:' + aspectRatio + '/1'"
             style=""
@@ -38,6 +38,7 @@
             data() {
                 return {
                     chart: undefined,
+                    chartId: `bar-chart-${Math.random().toString(36).substr(2, 9)}`,
                 }
             },
 
@@ -57,7 +58,13 @@
                         this.chart.destroy();
                     }
 
-                    this.chart = new Chart(document.getElementById(this.$.uid + '_chart'), {
+                    const canvasElement = document.getElementById(this.chartId);
+                    if (!canvasElement) {
+                        console.error('Bar chart canvas element not found');
+                        return;
+                    }
+                    const ctx = canvasElement.getContext('2d');
+                    this.chart = new Chart(ctx, {
                         type: 'bar',
                         
                         data: {

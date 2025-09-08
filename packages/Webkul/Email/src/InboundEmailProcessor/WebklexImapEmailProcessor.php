@@ -2,6 +2,7 @@
 
 namespace Webkul\Email\InboundEmailProcessor;
 
+use Illuminate\Support\Facades\Log;
 use Webklex\IMAP\Facades\Client;
 use Webkul\Email\Enums\SupportedFolderEnum;
 use Webkul\Email\InboundEmailProcessor\Contracts\InboundEmailProcessor;
@@ -48,10 +49,9 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
     {
         try {
             $rootFolders = $this->client->getFolders();
-
             $this->processMessagesFromLeafFolders($rootFolders);
         } catch (\Exception $e) {
-            throw new \Exception($e->getMessage());
+            throw $e;
         }
     }
 
@@ -62,93 +62,106 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
      */
     public function processMessage($message = null): void
     {
-        $attributes = $message->getAttributes();
+        Log::info('PROCESS STARTED: '.($message->getSubject() ?? 'no subject'));
+        Log::info('[DEBUG] processMessage() called');
 
-        $messageId = $attributes['message_id']->first();
+        try {
+            $attributes = $message->getAttributes();
+            $messageId = $attributes['message_id']->first();
 
-        $email = $this->emailRepository->findOneByField('message_id', $messageId);
+            $email = $this->emailRepository->findOneByField('message_id', $messageId);
 
-        if ($email) {
-            return;
-        }
+            if ($email) {
+                Log::info("Message already exists: $messageId");
 
-        $replyToEmails = $this->getEmailsByAttributeCode($attributes, 'to');
-
-        foreach ($replyToEmails as $to) {
-            if ($email = $this->emailRepository->findOneWhere(['message_id' => $to])) {
-                break;
+                return;
             }
-        }
 
-        if (! isset($email) && isset($attributes['in_reply_to'])) {
-            $inReplyTo = $attributes['in_reply_to']->first();
+            $replyToEmails = $this->getEmailsByAttributeCode($attributes, 'to');
 
-            $email = $this->emailRepository->findOneWhere(['message_id' => $inReplyTo]);
-
-            if (! $email) {
-                $email = $this->emailRepository->findOneWhere([['reference_ids', 'like',  '%'.$inReplyTo.'%']]);
-            }
-        }
-
-        $references = [$messageId];
-
-        if (! isset($email) && isset($attributes['references'])) {
-            array_push($references, ...$attributes['references']->all());
-
-            foreach ($references as $reference) {
-                if ($email = $this->emailRepository->findOneWhere([['reference_ids', 'like', '%'.$reference.'%']])) {
+            foreach ($replyToEmails as $to) {
+                if ($email = $this->emailRepository->findOneWhere(['message_id' => $to])) {
                     break;
                 }
             }
-        }
 
-        /**
-         * Maps the folder name to the supported folder in our application.
-         *
-         * To Do: Review this.
-         */
-        $folderName = match ($message->getFolder()->name) {
-            'INBOX'     => SupportedFolderEnum::INBOX->value,
-            'Important' => SupportedFolderEnum::IMPORTANT->value,
-            'Starred'   => SupportedFolderEnum::STARRED->value,
-            'Drafts'    => SupportedFolderEnum::DRAFT->value,
-            'Sent Mail' => SupportedFolderEnum::SENT->value,
-            'Trash'     => SupportedFolderEnum::TRASH->value,
-            default     => '',
-        };
+            if (! isset($email) && isset($attributes['in_reply_to'])) {
+                $inReplyTo = $attributes['in_reply_to']->first();
 
-        $parentEmail = null;
+                $email = $this->emailRepository->findOneWhere(['message_id' => $inReplyTo])
+                    ?? $this->emailRepository->findOneWhere([['reference_ids', 'like', '%'.$inReplyTo.'%']]);
+            }
 
-        if ($email) {
-            $parentEmail = $this->emailRepository->update([
-                'folders'       => array_unique(array_merge($email->folders, [$folderName])),
-                'reference_ids' => array_merge($email->reference_ids ?? [], [$references]),
-            ], $email->id);
-        }
+            // ここで references を一次元配列として生成
+            $references = array_filter(array_merge(
+                [$messageId],
+                isset($attributes['references']) ? $attributes['references']->all() : []
+            ));
 
-        $email = $this->emailRepository->create([
-            'from'          => $attributes['from']->first()->mail,
-            'subject'       => $attributes['subject']->first(),
-            'name'          => $attributes['from']->first()->personal,
-            'reply'         => $message->bodies['html'] ?? $message->bodies['text'],
-            'is_read'       => (int) $message->flags()->has('seen'),
-            'folders'       => [$folderName],
-            'reply_to'      => $this->getEmailsByAttributeCode($attributes, 'to'),
-            'cc'            => $this->getEmailsByAttributeCode($attributes, 'cc'),
-            'bcc'           => $this->getEmailsByAttributeCode($attributes, 'bcc'),
-            'source'        => 'email',
-            'user_type'     => 'person',
-            'unique_id'     => $messageId,
-            'message_id'    => $messageId,
-            'reference_ids' => $references,
-            'created_at'    => $this->convertToDesiredTimezone($message->date->toDate()),
-            'parent_id'     => $parentEmail?->id,
-        ]);
+            /**
+             * Maps the folder name to the supported folder in our application.
+             *
+             * To Do: Review this.
+             */
+            $folderName = match ($message->getFolder()->name) {
+                'INBOX'     => SupportedFolderEnum::INBOX->value,
+                'Important' => SupportedFolderEnum::IMPORTANT->value,
+                'Starred'   => SupportedFolderEnum::STARRED->value,
+                'Drafts'    => SupportedFolderEnum::DRAFT->value,
+                'Sent Mail' => SupportedFolderEnum::SENT->value,
+                'Trash'     => SupportedFolderEnum::TRASH->value,
+                default     => '',
+            };
 
-        if ($message->hasAttachments()) {
-            $this->attachmentRepository->uploadAttachments($email, [
-                'source'      => 'email',
-                'attachments' => $message->getAttachments(),
+            $parentEmail = null;
+
+            if ($email) {
+                $refIds = array_merge(
+                    is_array($email->reference_ids) ? $email->reference_ids : [],
+                    $references
+                );
+
+                $parentEmail = $this->emailRepository->update([
+                    'folders'       => array_unique(array_merge($email->folders, [$folderName])),
+                    'reference_ids' => array_values(array_unique($refIds)),
+                ], $email->id);
+            }
+
+            $emailData = [
+                'from'          => $attributes['from']->first()->mail,
+                'subject'       => $attributes['subject']->first(),
+                'name'          => $attributes['from']->first()->personal,
+                'reply'         => $message->bodies['html'] ?? (! empty($message->bodies['text']) ? nl2br(e($message->bodies['text'])) : '(本文なし)'),
+                'is_read'       => (int) $message->flags()->has('seen'),
+                'folders'       => [$folderName],
+                'reply_to'      => $this->getEmailsByAttributeCode($attributes, 'to'),
+                'cc'            => $this->getEmailsByAttributeCode($attributes, 'cc'),
+                'bcc'           => $this->getEmailsByAttributeCode($attributes, 'bcc'),
+                'source'        => 'email',
+                'user_type'     => 'person',
+                'unique_id'     => $messageId,
+                'message_id'    => $messageId,
+                'reference_ids' => array_values(array_unique($references)),
+                'created_at'    => $this->convertToDesiredTimezone($message->date->toDate()),
+                'parent_id'     => $parentEmail?->id,
+            ];
+
+            // Log::info('Creating email', ['data' => $emailData]);
+
+            $email = $this->emailRepository->create($emailData);
+
+            Log::info('Email created: '.$email->id);
+
+            if ($message->hasAttachments()) {
+                $this->attachmentRepository->uploadAttachments($email, [
+                    'source'      => 'email',
+                    'attachments' => $message->getAttachments(),
+                ]);
+            }
+
+        } catch (\Throwable $e) {
+            Log::error('Email processing error: '.$e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }
@@ -158,22 +171,30 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
      *
      * @param  \Webklex\IMAP\Support\FolderCollection  $rootFoldersCollection
      */
-    protected function processMessagesFromLeafFolders($rootFoldersCollection = null): void
+    protected function processMessagesFromLeafFolders($folders)
     {
-        $rootFoldersCollection->each(function ($folder) {
-            if (! $folder->children->isEmpty()) {
-                $this->processMessagesFromLeafFolders($folder->children);
-
-                return;
-            }
+        $folders->each(function ($folder) {
+            Log::info('[DEBUG] Folder found: '.$folder->name);
 
             if (in_array($folder->name, ['All Mail'])) {
+                Log::info('[DEBUG] Skipping folder: '.$folder->name);
+
                 return;
             }
 
-            return $folder->query()->since(now()->subDays(10))->get()->each(function ($message) {
+            // 自身を処理
+            Log::info('[DEBUG] Scanning folder: '.$folder->name);
+            $messages = $folder->query()->all()->get();
+            Log::info('[DEBUG] Message count in '.$folder->name.': '.$messages->count());
+
+            $messages->each(function ($message) {
                 $this->processMessage($message);
             });
+
+            // 子も処理（あれば）
+            if (! $folder->children->isEmpty()) {
+                $this->processMessagesFromLeafFolders($folder->children);
+            }
         });
     }
 
@@ -212,15 +233,10 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
         $defaultConfig = config('imap.accounts.default');
 
         $defaultConfig['host'] = core()->getConfigData('email.imap.account.host') ?: $defaultConfig['host'];
-
         $defaultConfig['port'] = core()->getConfigData('email.imap.account.port') ?: $defaultConfig['port'];
-
         $defaultConfig['encryption'] = core()->getConfigData('email.imap.account.encryption') ?: $defaultConfig['encryption'];
-
         $defaultConfig['validate_cert'] = (bool) core()->getConfigData('email.imap.account.validate_cert');
-
         $defaultConfig['username'] = core()->getConfigData('email.imap.account.username') ?: $defaultConfig['username'];
-
         $defaultConfig['password'] = core()->getConfigData('email.imap.account.password') ?: $defaultConfig['password'];
 
         return $defaultConfig;

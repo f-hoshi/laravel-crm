@@ -131,14 +131,16 @@ class LeadRepository extends Repository
             $data['expected_close_date'] = null;
         }
 
-        $lead = parent::create(array_merge([
-            'lead_pipeline_id'       => 1,
-            'lead_pipeline_stage_id' => 1,
-        ], $data));
+        $lead = parent::create($data);
 
-        $this->attributeValueRepository->save(array_merge($data, [
+        $attributeData = array_merge($data, [
             'entity_id' => $lead->id,
-        ]));
+        ]);
+        
+        unset($attributeData['lead_pipeline_id']);
+        unset($attributeData['lead_pipeline_stage_id']);
+        
+        $this->attributeValueRepository->save($attributeData);
 
         if (isset($data['products'])) {
             foreach ($data['products'] as $product) {
@@ -223,9 +225,14 @@ class LeadRepository extends Repository
             return $lead;
         }
 
-        $this->attributeValueRepository->save(array_merge($data, [
+        $attributeData = array_merge($data, [
             'entity_id' => $lead->id,
-        ]));
+        ]);
+        
+        unset($attributeData['lead_pipeline_id']);
+        unset($attributeData['lead_pipeline_stage_id']);
+        
+        $this->attributeValueRepository->save($attributeData);
 
         $previousProductIds = $lead->products()->pluck('id');
 

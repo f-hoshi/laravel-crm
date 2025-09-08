@@ -14,6 +14,11 @@ use Webkul\Admin\Helpers\Reporting\Quote;
 class Dashboard
 {
     /**
+     * Current pipeline ID for filtering.
+     */
+    protected ?int $pipelineId = null;
+
+    /**
      * Create a controller instance.
      *
      * @return void
@@ -26,6 +31,18 @@ class Dashboard
         protected Organization $organizationReporting,
         protected Quote $quoteReporting,
     ) {}
+
+    /**
+     * Set pipeline ID for filtering.
+     *
+     * @param int|null $pipelineId
+     * @return void
+     */
+    public function setPipelineId(?int $pipelineId): void
+    {
+        $this->pipelineId = $pipelineId;
+        $this->leadReporting->setPipelineId($pipelineId);
+    }
 
     /**
      * Returns the overall revenue statistics.

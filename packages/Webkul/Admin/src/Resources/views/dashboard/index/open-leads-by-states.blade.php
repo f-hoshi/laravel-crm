@@ -27,13 +27,13 @@
                     </p>
                 </div>
 
-                <!-- Doughnut Chart -->
+                <!-- Funnel Chart -->
                 <div
                     class="relative flex w-full max-w-full flex-col gap-4"
-                    v-if="report.statistics.length"
+                    v-if="report.statistics && report.statistics.length"
                 >
                     <canvas
-                        :id="$.uid + '_chart'"
+                        :id="chartId"
                         class="w-full max-w-full items-end px-12"
                         :style="{ height: report.statistics.length * 60 + 'px' }"
                     ></canvas>
@@ -42,6 +42,7 @@
                         <li
                             class="flex w-full flex-col border-b border-gray-200 pb-[9px] pt-2.5 last:border-none dark:border-gray-800"
                             v-for="(stat, index) in report.statistics"
+                            :key="index"
                         >
                             <span class="text-sm font-semibold dark:text-gray-100">
                                 @{{ stat.total }}
@@ -82,7 +83,6 @@
         </template>
     </script>
 
-
     <script type="module">
         app.component('v-dashboard-open-leads-by-states', {
             template: '#v-dashboard-open-leads--by-states-template',
@@ -90,77 +90,142 @@
             data() {
                 return {
                     report: [],
-
                     isLoading: true,
-
-                    chart: undefined,
+                    chart: null,
+                    chartId: `open-leads-chart-${Math.random().toString(36).substr(2, 9)}`,
+                    isChartCreating: false,
                 }
             },
 
             mounted() {
                 this.getStats({});
-
                 this.$emitter.on('reporting-filter-updated', this.getStats);
             },
 
+            beforeUnmount() {
+                this.destroyChart();
+                this.$emitter.off('reporting-filter-updated', this.getStats);
+            },
+
             methods: {
-                getStats(filtets) {
+                getStats(filters) {
                     this.isLoading = true;
-
-                    var filtets = Object.assign({}, filtets);
-
-                    filtets.type = 'open-leads-by-states';
+                    
+                    const params = Object.assign({}, filters);
+                    params.type = 'open-leads-by-states';
 
                     this.$axios.get("{{ route('admin.dashboard.stats') }}", {
-                            params: filtets
+                            params: params
                         })
                         .then(response => {
                             this.report = response.data;
-
                             this.isLoading = false;
-
-                            setTimeout(() => {
-                                this.prepare();
-                            }, 0);
+                            
+                            // データがある場合のみチャートを作成
+                            if (this.report.statistics && this.report.statistics.length > 0) {
+                                this.$nextTick(() => {
+                                    setTimeout(() => {
+                                        this.prepare();
+                                    }, 500);
+                                });
+                            }
                         })
-                        .catch(error => {});
+                        .catch(error => {
+                            console.error('Error fetching stats:', error);
+                            this.isLoading = false;
+                        });
+                },
+
+                destroyChart() {
+                    if (this.chart) {
+                        try {
+                            this.chart.destroy();
+                        } catch (error) {
+                            console.warn('Chart destroy error:', error);
+                        }
+                        this.chart = null;
+                    }
+                    this.isChartCreating = false;
                 },
 
                 prepare() {
-                    if (this.chart) {
-                        this.chart.destroy();
-                    }
-
-                    if (this.report.statistics.length === 0) {
+                    // チャート作成中の場合、処理をスキップ
+                    if (this.isChartCreating) {
+                        console.log('Chart creation already in progress, skipping...');
                         return;
                     }
 
-                    const ctx = document.getElementById(this.$.uid + '_chart')?.getContext('2d');
+                    // 既存のチャートを破棄
+                    this.destroyChart();
 
-                    // Create gradient
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                    gradient.addColorStop(0, 'rgba(144, 247, 236, 0.8)');
-                    gradient.addColorStop(1, 'rgba(50, 204, 188, 1)');
+                    // データがない場合は終了
+                    if (!this.report.statistics || this.report.statistics.length === 0) {
+                        return;
+                    }
 
-                    this.chart = new Chart(ctx, {
-                        type: 'funnel',
+                    // チャート作成フラグを設定
+                    this.isChartCreating = true;
 
-                        data: {
-                            labels: this.report.statistics.map(stat => stat.name),
-                            datasets: [
-                                {
+                    // Canvas要素を取得
+                    const canvasElement = document.getElementById(this.chartId);
+                    if (!canvasElement) {
+                        console.error('Canvas element not found with ID:', this.chartId);
+                        this.isChartCreating = false;
+                        return;
+                    }
+
+                    // Canvas要素がDOMに存在することを確認
+                    if (!document.body.contains(canvasElement)) {
+                        console.error('Canvas element not in DOM');
+                        this.isChartCreating = false;
+                        return;
+                    }
+
+                    try {
+                        const ctx = canvasElement.getContext('2d');
+                        if (!ctx) {
+                            console.error('Cannot get 2D context from canvas');
+                            this.isChartCreating = false;
+                            return;
+                        }
+
+                        // Create gradient
+                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, 'rgba(144, 247, 236, 0.8)');
+                        gradient.addColorStop(1, 'rgba(50, 204, 188, 1)');
+
+                        this.chart = new Chart(ctx, {
+                            type: 'funnel',
+                            data: {
+                                labels: this.report.statistics.map(stat => stat.name),
+                                datasets: [{
                                     data: this.report.statistics.map(stat => stat.total),
                                     backgroundColor: gradient,
                                     borderColor: 'rgba(0, 0, 0, 0)',
                                     borderWidth: 0,
+                                }],
+                            },
+                            options: {
+                                indexAxis: 'y',
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
                                 },
-                            ],
-                        },
+                                animation: {
+                                    duration: 0
+                                }
+                            },
+                        });
 
-                        options: {
-                            indexAxis: 'y',
-                        },
-                    });
+                        console.log('Funnel chart created successfully');
+                        this.isChartCreating = false;
+                    } catch (error) {
+                        console.error('Chart creation error:', error);
+                        this.isChartCreating = false;
+                    }
                 }
             }
         });
