@@ -2,12 +2,12 @@
 
 namespace Webkul\Email\InboundEmailProcessor;
 
+use Illuminate\Support\Facades\Log;
 use Webklex\IMAP\Facades\Client;
 use Webkul\Email\Enums\SupportedFolderEnum;
 use Webkul\Email\InboundEmailProcessor\Contracts\InboundEmailProcessor;
 use Webkul\Email\Repositories\AttachmentRepository;
 use Webkul\Email\Repositories\EmailRepository;
-use Illuminate\Support\Facades\Log;
 
 class WebklexImapEmailProcessor implements InboundEmailProcessor
 {
@@ -62,46 +62,47 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
      */
     public function processMessage($message = null): void
     {
-        Log::info('PROCESS STARTED: ' . ($message->getSubject() ?? 'no subject'));
+        Log::info('PROCESS STARTED: '.($message->getSubject() ?? 'no subject'));
         Log::info('[DEBUG] processMessage() called');
-    
+
         try {
             $attributes = $message->getAttributes();
             $messageId = $attributes['message_id']->first();
-    
+
             $email = $this->emailRepository->findOneByField('message_id', $messageId);
-    
+
             if ($email) {
                 Log::info("Message already exists: $messageId");
+
                 return;
             }
-    
+
             $replyToEmails = $this->getEmailsByAttributeCode($attributes, 'to');
-    
+
             foreach ($replyToEmails as $to) {
                 if ($email = $this->emailRepository->findOneWhere(['message_id' => $to])) {
                     break;
                 }
             }
-    
+
             if (! isset($email) && isset($attributes['in_reply_to'])) {
                 $inReplyTo = $attributes['in_reply_to']->first();
-    
+
                 $email = $this->emailRepository->findOneWhere(['message_id' => $inReplyTo])
-                    ?? $this->emailRepository->findOneWhere([['reference_ids', 'like', '%' . $inReplyTo . '%']]);
+                    ?? $this->emailRepository->findOneWhere([['reference_ids', 'like', '%'.$inReplyTo.'%']]);
             }
-    
+
             // ここで references を一次元配列として生成
             $references = array_filter(array_merge(
                 [$messageId],
                 isset($attributes['references']) ? $attributes['references']->all() : []
             ));
-    
-        /**
-         * Maps the folder name to the supported folder in our application.
-         *
-         * To Do: Review this.
-         */
+
+            /**
+             * Maps the folder name to the supported folder in our application.
+             *
+             * To Do: Review this.
+             */
             $folderName = match ($message->getFolder()->name) {
                 'INBOX'     => SupportedFolderEnum::INBOX->value,
                 'Important' => SupportedFolderEnum::IMPORTANT->value,
@@ -111,26 +112,26 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
                 'Trash'     => SupportedFolderEnum::TRASH->value,
                 default     => '',
             };
-    
+
             $parentEmail = null;
-    
+
             if ($email) {
                 $refIds = array_merge(
                     is_array($email->reference_ids) ? $email->reference_ids : [],
                     $references
                 );
-    
+
                 $parentEmail = $this->emailRepository->update([
                     'folders'       => array_unique(array_merge($email->folders, [$folderName])),
                     'reference_ids' => array_values(array_unique($refIds)),
                 ], $email->id);
             }
-    
+
             $emailData = [
                 'from'          => $attributes['from']->first()->mail,
                 'subject'       => $attributes['subject']->first(),
                 'name'          => $attributes['from']->first()->personal,
-                'reply'         => $message->bodies['html'] ?? (!empty($message->bodies['text']) ? nl2br(e($message->bodies['text'])) : '(本文なし)'),
+                'reply'         => $message->bodies['html'] ?? (! empty($message->bodies['text']) ? nl2br(e($message->bodies['text'])) : '(本文なし)'),
                 'is_read'       => (int) $message->flags()->has('seen'),
                 'folders'       => [$folderName],
                 'reply_to'      => $this->getEmailsByAttributeCode($attributes, 'to'),
@@ -144,57 +145,59 @@ class WebklexImapEmailProcessor implements InboundEmailProcessor
                 'created_at'    => $this->convertToDesiredTimezone($message->date->toDate()),
                 'parent_id'     => $parentEmail?->id,
             ];
-    
+
             // Log::info('Creating email', ['data' => $emailData]);
-    
+
             $email = $this->emailRepository->create($emailData);
-    
-            Log::info('Email created: ' . $email->id);
-    
+
+            Log::info('Email created: '.$email->id);
+
             if ($message->hasAttachments()) {
                 $this->attachmentRepository->uploadAttachments($email, [
                     'source'      => 'email',
                     'attachments' => $message->getAttachments(),
                 ]);
             }
-    
+
         } catch (\Throwable $e) {
-            Log::error('Email processing error: ' . $e->getMessage(), [
+            Log::error('Email processing error: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
         }
     }
-    
+
     /**
      * Process the messages from all folders.
      *
      * @param  \Webklex\IMAP\Support\FolderCollection  $rootFoldersCollection
-     */    protected function processMessagesFromLeafFolders($folders)
+     */
+    protected function processMessagesFromLeafFolders($folders)
     {
         $folders->each(function ($folder) {
-            Log::info('[DEBUG] Folder found: ' . $folder->name);
-    
+            Log::info('[DEBUG] Folder found: '.$folder->name);
+
             if (in_array($folder->name, ['All Mail'])) {
-                Log::info('[DEBUG] Skipping folder: ' . $folder->name);
+                Log::info('[DEBUG] Skipping folder: '.$folder->name);
+
                 return;
             }
-    
+
             // 自身を処理
-            Log::info('[DEBUG] Scanning folder: ' . $folder->name);
+            Log::info('[DEBUG] Scanning folder: '.$folder->name);
             $messages = $folder->query()->all()->get();
-            Log::info('[DEBUG] Message count in ' . $folder->name . ': ' . $messages->count());
-    
+            Log::info('[DEBUG] Message count in '.$folder->name.': '.$messages->count());
+
             $messages->each(function ($message) {
                 $this->processMessage($message);
             });
-    
+
             // 子も処理（あれば）
             if (! $folder->children->isEmpty()) {
                 $this->processMessagesFromLeafFolders($folder->children);
             }
         });
     }
-    
+
     /**
      * Get the emails by the attribute code.
      */

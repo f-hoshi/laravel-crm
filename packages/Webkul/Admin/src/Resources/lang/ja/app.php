@@ -558,7 +558,7 @@ return [
                 'title'              => ':name',
                 'about-person'       => '担当者について',
                 'about-organization' => '組織について',
-                'activities' => [
+                'activities'         => [
                     'index' => [
                         'all'          => 'All',
                         'calls'        => 'Calls',
@@ -642,7 +642,7 @@ return [
                 'update-success' => '組織が正常に更新されました。',
                 'delete-success' => '組織が正常に削除されました。',
                 'delete-failed'  => '組織を削除できませんでした。',
-                'datagrid' => [
+                'datagrid'       => [
                     'delete'        => 'Delete',
                     'edit'          => 'Edit',
                     'id'            => 'ID',
@@ -738,7 +738,7 @@ return [
                 'update-success'    => 'グループが正常に更新されました。',
                 'destroy-success'   => 'グループが正常に削除されました。',
                 'delete-failed'     => 'グループを削除できませんでした。',
-                'datagrid'   => [
+                'datagrid'          => [
                     'delete'      => 'Delete',
                     'description' => 'Description',
                     'edit'        => 'Edit',
@@ -772,7 +772,7 @@ return [
                 'title'                     => '役割',
                 'update-success'            => '役割が正常に更新されました。',
                 'user-define-error'         => 'システム定義の役割は削除できません。',
-                'datagrid'   => [
+                'datagrid'                  => [
                     'all'             => 'All',
                     'custom'          => 'Custom',
                     'delete'          => 'Delete',
@@ -1135,7 +1135,7 @@ return [
                     'delete-success'      => 'キャンペーンが正常に削除されました。',
                     'delete-failed'       => 'キャンペーンを削除できませんでした。',
                     'mass-delete-success' => '複数のキャンペーンが正常に削除されました。',
-                    'datagrid'   => [
+                    'datagrid'            => [
                         'id'       => 'ID',
                         'name'     => 'Name',
                         'subject'  => 'Subject',
@@ -2182,6 +2182,9 @@ return [
     'dashboard' => [
         'index' => [
             'title' => 'ダッシュボード',
+            'all-pipelines' => 'すべてのパイプライン',
+            'start-date' => '開始日',
+            'end-date' => '終了日',
 
             'revenue' => [
                 'lost-revenue' => '失われた収益',
