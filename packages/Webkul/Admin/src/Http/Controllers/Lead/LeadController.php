@@ -329,25 +329,60 @@ class LeadController extends Controller
      */
     public function updateStage(int $id)
     {
-        $this->validate(request(), [
-            'lead_pipeline_stage_id' => 'required',
-        ]);
+        // Validation rules for stage update
+        $validationRules = [
+            'lead_pipeline_stage_id' => 'required|integer|exists:lead_pipeline_stages,id',
+        ];
+
+        // Check if stage requires additional information
+        $stageId = request()->input('lead_pipeline_stage_id');
+        $stage = $this->stageRepository->find($stageId);
+        
+        if ($stage && in_array($stage->code, ['won', 'lost'])) {
+            if ($stage->code === 'won') {
+                $validationRules['lead_value'] = 'nullable|numeric|min:0';
+            } elseif ($stage->code === 'lost') {
+                $validationRules['lost_reason'] = 'nullable|string|max:1000';
+            }
+            $validationRules['closed_at'] = 'required|date';
+        }
+
+        $this->validate(request(), $validationRules);
 
         $lead = $this->leadRepository->findOrFail($id);
 
+        // Verify the stage belongs to the same pipeline as the lead
         $stage = $lead->pipeline->stages()
-            ->where('id', request()->input('lead_pipeline_stage_id'))
+            ->where('id', $stageId)
             ->firstOrFail();
 
         Event::dispatch('lead.update.before', $id);
 
+        // Prepare data for update
+        $updateData = [
+            'entity_type'            => 'leads',
+            'lead_pipeline_stage_id' => $stage->id,
+        ];
+
+        // Add additional fields for won/lost stages
+        if (in_array($stage->code, ['won', 'lost'])) {
+            if ($stage->code === 'won' && request()->has('lead_value')) {
+                $updateData['lead_value'] = request()->input('lead_value');
+            }
+            
+            if ($stage->code === 'lost' && request()->has('lost_reason')) {
+                $updateData['lost_reason'] = request()->input('lost_reason');
+            }
+            
+            if (request()->has('closed_at')) {
+                $updateData['closed_at'] = request()->input('closed_at');
+            }
+        }
+
         $lead = $this->leadRepository->update(
-            [
-                'entity_type'            => 'leads',
-                'lead_pipeline_stage_id' => $stage->id,
-            ],
+            $updateData,
             $id,
-            ['lead_pipeline_stage_id']
+            array_keys($updateData)
         );
 
         Event::dispatch('lead.update.after', $lead);
