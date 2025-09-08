@@ -291,6 +291,7 @@
                         this.isChartCreating = false;
                     }
                 }
+            }
         });
     </script>
 @endPushOnce
