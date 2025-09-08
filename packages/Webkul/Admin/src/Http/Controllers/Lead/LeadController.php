@@ -337,7 +337,7 @@ class LeadController extends Controller
         // Check if stage requires additional information
         $stageId = request()->input('lead_pipeline_stage_id');
         $stage = $this->stageRepository->find($stageId);
-        
+
         if ($stage && in_array($stage->code, ['won', 'lost'])) {
             if ($stage->code === 'won') {
                 $validationRules['lead_value'] = 'nullable|numeric|min:0';
@@ -369,11 +369,11 @@ class LeadController extends Controller
             if ($stage->code === 'won' && request()->has('lead_value')) {
                 $updateData['lead_value'] = request()->input('lead_value');
             }
-            
+
             if ($stage->code === 'lost' && request()->has('lost_reason')) {
                 $updateData['lost_reason'] = request()->input('lost_reason');
             }
-            
+
             if (request()->has('closed_at')) {
                 $updateData['closed_at'] = request()->input('closed_at');
             }
