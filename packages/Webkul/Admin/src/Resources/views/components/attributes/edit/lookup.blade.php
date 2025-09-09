@@ -50,8 +50,8 @@
                     <span
                         class="overflow-hidden text-ellipsis"
                         :title="selectedItem && selectedItem.name ? selectedItem.name : ''"
-                        {{ selectedItem && selectedItem.name !== "" ? selectedItem.name : "@lang('admin::app.components.attributes.lookup.click-to-add')" }}
-                    </span>
+                        v-text="selectedItem && selectedItem.name !== '' ? selectedItem.name : '@lang('admin::app.components.attributes.lookup.click-to-add')'"
+                    ></span>
                     <!-- Icons Container -->
                     <div class="flex items-center gap-2">
                         <!-- Close Icon -->
@@ -187,13 +187,21 @@
                 if (this.attribute.code === 'lead_pipeline_id') {
                     this.$watch('selectedItem', (newVal) => {
                         if (newVal && newVal.id) {
-                            this.$emit('pipeline-changed', newVal.id);
+                            this.$emitter.emit('pipeline-changed', newVal.id);
                         }
                     }, { deep: true });
                 }
                 // ステージのlookupコンポーネントにパイプライン変更イベントリスナーを追加
                 if (this.attribute.code === 'lead_pipeline_stage_id') {
                     this.$emitter.on('pipeline-changed', this.onPipelineChanged);
+                    
+                    // 既に選択されているパイプラインIDを取得
+                    const pipelineInput = document.querySelector('input[name="lead_pipeline_id"]');
+                    if (pipelineInput && pipelineInput.value) {
+                        this.selectedPipelineId = pipelineInput.value;
+                        // 初期データを読み込む
+                        this.loadInitialData();
+                    }
                 }
             },
             beforeUnmount() {
@@ -298,11 +306,6 @@
                     this.searchTerm = '';
 
                     this.$emit('lookup-added', this.selectedItem);
-
-                    // パイプライン変更イベントを発火
-                    if (this.attribute.code === 'lead_pipeline_id' && result.id) {
-                        this.$emitter.emit('pipeline-changed', result.id);
-                    }
                 },
 
                 handleFocusOut(e) {

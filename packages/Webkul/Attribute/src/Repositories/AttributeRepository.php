@@ -146,7 +146,7 @@ class AttributeRepository extends Repository
         $conditions = [[$lookup['label_column'] ?? 'name', 'like', '%'.urldecode($query).'%']];
 
         // パイプラインステージの場合、パイプラインIDでフィルタリング
-        if ($lookup === 'lead_pipeline_stages' && request()->has('pipeline_id')) {
+        if (isset($lookup['repository']) && $lookup['repository'] === 'Webkul\Lead\Repositories\StageRepository' && request()->has('pipeline_id')) {
             $pipelineId = request()->input('pipeline_id');
             if ($pipelineId) {
                 $conditions[] = ['lead_pipeline_id', '=', $pipelineId];
